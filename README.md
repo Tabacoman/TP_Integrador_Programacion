@@ -4,15 +4,6 @@
 
 Este documento contiene la planificación de las tareas para el desarrollo de la aplicación de escritorio con Python, Tkinter y SQLite.
 
-## 🔧 Formato de tareas
-
-Cada tarea incluye:
-- ✅ **Título**
-- 📝 **Descripción**
-- 🎯 **Criterios de aceptación**
-
----
-
 ## ✅ Tarea 1: Crear sistema de login
 
 **Descripción:**  
