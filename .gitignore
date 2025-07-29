@@ -1,0 +1,41 @@
+# Ignorar entorno virtual
+Entorno_TP/
+
+# Archivos de Python compilados
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos de configuración de VS Code
+.vscode/
+
+# Archivos temporales del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de logs
+*.log
+
+# Archivos de dependencias
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Archivos de pruebas
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Entornos virtuales comunes
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
