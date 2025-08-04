@@ -1,6 +1,6 @@
 from db.database import Database
 from gui.Login import login_interfaz
-from gui.Interfaz import main_interfaz  # Esta será la interfaz principal tras el login
+from gui.Interfaz import main_interfaz
 
 def main():
     db = Database()
