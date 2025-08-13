@@ -21,7 +21,6 @@ class Database:
             sqlite3.Connection: Objeto de conexión a la base de datos
         """
         conn = sqlite3.connect(self.db_name)
-        # Permite acceder a las columnas por nombre (ej: row['username'])
         conn.row_factory = sqlite3.Row
         return conn
 

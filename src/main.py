@@ -1,11 +1,15 @@
+import flet as ft
 from db.database import Database
-from gui.Login import login_interfaz
-from gui.Interfaz import main_interfaz
+from gui.login_flet import login_view
+from gui.interfaz_flet import main_menu
 
-def main():
-    db = Database()
+db = Database()
+def on_login_success(page, user):
+    main_menu(page,db, user)
+
+def main(page: ft.Page):
+    
     # Lanza la interfaz de login. Si el login es exitoso, pasa a la interfaz principal.
-    login_interfaz(db, on_login_success=lambda user: main_interfaz(db, user))
+    login_view(page, db, on_login_success)
 
-if __name__ == "__main__":
-    main()
+ft.app(target=main)
