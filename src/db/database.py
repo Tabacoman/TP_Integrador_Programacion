@@ -11,7 +11,6 @@ class Database:
         """
         self.db_name = db_name
         self.create_tables()
-        self.insert_initial_data()
 
     def get_connection(self):
         """
@@ -44,7 +43,8 @@ class Database:
                     titulo TEXT NOT NULL,
                     autor TEXT NOT NULL,
                     anio INTEGER,
-                    genero TEXT NOT NULL
+                    genero TEXT NOT NULL,
+                    UNIQUE(titulo, autor, anio, genero)  -- Evita duplicados exactos
                 )
             """)
             

@@ -1,12 +1,12 @@
 import flet as ft
-from db.Querys import QUERY_SELECT_ALL_BOOKS
+from Utilities.funtions import get_libros
 
 def abm_libros_view(page: ft.Page, db):
     page.title = "Gestión de Libros (ABM)"
     page.clean()
 
     # Obtener los libros
-    libros = db.fetch_all(QUERY_SELECT_ALL_BOOKS)
+    libros = get_libros(db)
 
     # Botón para agregar libro
     btn_agregar = ft.ElevatedButton("Agregar libro", icon="add", on_click=lambda e: print("Agregar libro"))
