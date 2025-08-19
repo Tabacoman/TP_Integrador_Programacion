@@ -3,7 +3,6 @@ from Utilities.funtions import log_in
 
 def login_view(page: ft.Page, db, on_login_success):
     def btn_ingresar(usuario, contrasena):
-        print("funcion ejecutada", usuario, contrasena)
         user = log_in(db, usuario, contrasena)
         if user:
             on_login_success(page, user)

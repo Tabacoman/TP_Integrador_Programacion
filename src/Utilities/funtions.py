@@ -4,7 +4,7 @@ def log_in(db, usuario, contrasena):
             "SELECT * FROM usuarios WHERE username = ? AND password = ?",
             (usuario, contrasena)
         )
-        print(user)
+        
         return user
     except Exception as e:
         print(e)
@@ -13,7 +13,6 @@ def log_in(db, usuario, contrasena):
 def get_libros(db):
     try:
         libros = db.fetch_all("SELECT * FROM libros")
-        print(libros)
         return libros
     except Exception as e:
         print(e)
@@ -88,7 +87,7 @@ def buscar_libros(db, titulo=None, autor=None, anio=None, genero=None):
         params.append(f"%{genero}%")
     try:
         libros = db.fetch_all(query, tuple(params))
-        print(libros)
+        
         return libros
     except Exception as e:
         print(f"Error al buscar libros: {e}")
@@ -127,3 +126,14 @@ def eliminar_favorito(db, id_usuario, id_libro):
         print(f"Error al eliminar de favoritos: {e}")
         return False
 
+def get_favoritos(db, id_usuario):
+    try:
+        favoritos = db.fetch_all("""
+            SELECT libros.id, libros.titulo, libros.autor, libros.anio, libros.genero
+            FROM favoritos
+            JOIN libros ON favoritos.id_libro = libros.id
+            WHERE favoritos.id_usuario = ?
+        """, (id_usuario,))  # <-- la coma es necesaria
+        return favoritos
+    except Exception as e:
+        print(e)
