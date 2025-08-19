@@ -137,3 +137,29 @@ def get_favoritos(db, id_usuario):
         return favoritos
     except Exception as e:
         print(e)
+
+def insert_usuario(db, username, password, rol="user"):
+    try:
+        # Verificar si ya existe el usuario
+        usuario_existente = db.fetch_one(
+            "SELECT * FROM usuarios WHERE username = ?",
+            (username,)
+        )
+        if usuario_existente:
+            print("Error: El usuario ya existe.")
+            return False
+
+        if len(password) < 6:
+            print("Error: La contraseña debe tener al menos 6 caracteres.")
+            return False
+
+        # Insertar nuevo usuario
+        db.execute_query(
+            "INSERT INTO usuarios (username, password, rol) VALUES (?, ?, ?)",
+            (username, password, rol)
+        )
+        print("Usuario registrado correctamente.")
+        return True
+    except Exception as e:
+        print(f"Error al insertar usuario: {e}")
+        return False

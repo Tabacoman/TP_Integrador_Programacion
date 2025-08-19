@@ -23,7 +23,7 @@ def main_menu(page: ft.Page, db, user):
                 ft.TextButton("Buscar", style=ft.ButtonStyle(color="white", overlay_color="#2B169F"), on_click=lambda e: buscador_libro_view(page, db, user, volver_al_menu)),
                 ft.TextButton("Favoritos", style=ft.ButtonStyle(color="white", overlay_color="#2B169F"), on_click=lambda e: favoritos_view(page, db, user, volver_al_menu)),
                 *(
-                    [ft.TextButton("ABM Libros", style=ft.ButtonStyle(color="white", overlay_color="#2B169F"), on_click=lambda e: abm_libros_view(page, db, user, volver_al_menu))]
+                    [ft.TextButton("ABM Libros", style=ft.ButtonStyle(color="white", overlay_color="#2B169F"), on_click=lambda e: abm_libros_view(page, db, volver_al_menu))]
                     if user.get("rol") == "admin" else []
                 ),
                 ft.TextButton("Cerrar sesión", style=ft.ButtonStyle(color="white", overlay_color="#e53e3e"), on_click=lambda e: (page.clean(), login_view(page, db, on_login_success))),
@@ -72,7 +72,7 @@ def main_menu(page: ft.Page, db, user):
                     shape=ft.RoundedRectangleBorder(radius=12),
                     overlay_color="#fbbf24"
                 ),
-                on_click=lambda e: abm_libros_view(page, db, user, volver_al_menu)
+                on_click=lambda e: abm_libros_view(page, db, volver_al_menu)
             )
         )
 

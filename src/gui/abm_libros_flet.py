@@ -2,7 +2,7 @@ import flet as ft
 from Utilities.funtions import get_libros, insert_libro, update_libro, delete_libro
 
 
-def abm_libros_view(page: ft.Page, db, user=None, volver_al_menu=None):
+def abm_libros_view(page: ft.Page, db, volver_al_menu):
     libro_editando = {"id": None}  # guarda el libro que se está editando
 
     def abrir_formulario(e, libro=None):
