@@ -1,11 +1,14 @@
-def log_in(db, usuario, contrasena):
+from models.Libro import Libro
+from models.User import User
+
+def log_in(db, user: User):
     try: 
-        user = db.fetch_one(
+        row = db.fetch_one(
             "SELECT * FROM usuarios WHERE username = ? AND password = ?",
-            (usuario, contrasena)
+            (user.username, user.password)
         )
-        
-        return user
+        print(row)
+        return User(row["username"], row["password"], row["rol"], row["id"])
     except Exception as e:
         print(e)
         return False
