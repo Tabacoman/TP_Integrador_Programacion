@@ -6,7 +6,6 @@ from gui.login_flet import login_view
 
 
 def main_menu(page: ft.Page, db, user, on_login_success):
-    
     page.title = "Biblioteca Moderna"
     page.clean()
 

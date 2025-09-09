@@ -7,7 +7,7 @@ def log_in(db, user: User):
             "SELECT * FROM usuarios WHERE username = ? AND password = ?",
             (user.username, user.password)
         )
-        print(row)
+        
         return User(row["username"], row["password"], row["rol"], row["id"])
     except Exception as e:
         print(e)

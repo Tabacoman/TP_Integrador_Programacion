@@ -1,7 +1,7 @@
 import flet as ft
 from Utilities.funtions import buscar_libros, agregar_favorito, get_favoritos
 
-def buscador_libro_view(page: ft.Page, db, user=None, volver_al_menu=None):
+def buscador_libro_view(page: ft.Page, db, user, volver_al_menu):
     page.title = "Buscar libro"
     page.clean()
 
@@ -11,7 +11,7 @@ def buscador_libro_view(page: ft.Page, db, user=None, volver_al_menu=None):
     resultados = []
 
     # Obtener ids de favoritos del usuario
-    favoritos = get_favoritos(db, user["id"]) if user else []
+    favoritos = get_favoritos(db, user.id) if user else []
     favoritos_ids = {libro["id"] for libro in favoritos} if favoritos else set()
 
     def cargar_resultados(filtro=""):
@@ -70,14 +70,14 @@ def buscador_libro_view(page: ft.Page, db, user=None, volver_al_menu=None):
         cargar_resultados(search_input.value)
 
     def on_agregar_favorito(id_libro):
-        if agregar_favorito(db, user["id"], id_libro):
+        if agregar_favorito(db, user.id, id_libro):
             page.snack_bar = ft.SnackBar(ft.Text("Libro agregado a favoritos."), bgcolor="green")
         else:
             page.snack_bar = ft.SnackBar(ft.Text("Error al agregar a favoritos o ya está en favoritos."), bgcolor="red")
         page.snack_bar.open = True
         # Actualizar favoritos y recargar resultados
         nonlocal favoritos_ids
-        nuevos_favoritos = get_favoritos(db, user["id"]) or []
+        nuevos_favoritos = get_favoritos(db, user.id) or []
         favoritos_ids = {libro["id"] for libro in nuevos_favoritos}
         cargar_resultados(search_input.value)
 
