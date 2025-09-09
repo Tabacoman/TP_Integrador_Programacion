@@ -1,33 +1,41 @@
 import flet as ft
-from Utilities.funtions import buscar_libros, agregar_favorito, get_favoritos
+from Utilities.funtions import buscar_libros, agregar_favorito, get_favoritos, get_libros
+from models.Libro import Libro
+from models.User import User
 
-def buscador_libro_view(page: ft.Page, db, user, volver_al_menu):
+def buscador_libro_view(page: ft.Page, db, user: User, volver_al_menu):
     page.title = "Buscar libro"
     page.clean()
 
     # Estado de búsqueda
     search_input = ft.TextField(label="Buscar por título, autor o género", expand=True)
     search_button = ft.IconButton(icon="SEARCH", tooltip="Buscar")
-    resultados = []
+    resultados = ft.Column([], expand=True, scroll="auto")
 
     # Obtener ids de favoritos del usuario
-    favoritos = get_favoritos(db, user.id) if user else []
-    favoritos_ids = {libro["id"] for libro in favoritos} if favoritos else set()
+    favoritos = get_favoritos(db, user) if user else []
+    favoritos_ids = {libro.id for libro in favoritos} if favoritos else set()
 
     def cargar_resultados(filtro=""):
-        # Buscar libros según filtro
-        filtro = filtro.strip()
+        filtro = filtro.strip().lower()
         if filtro:
-            libros = buscar_libros(db, titulo=filtro) + buscar_libros(db, autor=filtro) + buscar_libros(db, genero=filtro)
+            # Buscamos creando objetos Libro con solo un campo cargado
+            libros = (
+                buscar_libros(db, Libro(titulo=filtro)) +
+                buscar_libros(db, Libro(autor=filtro)) +
+                buscar_libros(db, Libro(genero=filtro))
+            )
             # Eliminar duplicados por id
             vistos = set()
             libros_filtrados = []
             for l in libros:
-                if l["id"] not in vistos:
+                if l.id not in vistos:
                     libros_filtrados.append(l)
-                    vistos.add(l["id"])
+                    vistos.add(l.id)
         else:
-            libros_filtrados = buscar_libros(db)
+            # Si no hay filtro -> todos los libros
+            libros_filtrados = get_libros(db)
+
         resultados.controls.clear()
         if not libros_filtrados:
             resultados.controls.append(
@@ -39,22 +47,22 @@ def buscador_libro_view(page: ft.Page, db, user, volver_al_menu):
             )
         else:
             for libro in libros_filtrados:
-                en_favoritos = libro["id"] in favoritos_ids
+                en_favoritos = libro.id in favoritos_ids
                 resultados.controls.append(
                     ft.Container(
                         ft.Row([
                             ft.Column([
-                                ft.Text(f"Título: {libro['titulo']}", size=18, weight="bold"),
-                                ft.Text(f"Autor: {libro['autor']}"),
-                                ft.Text(f"Año: {libro['anio']}"),
-                                ft.Text(f"Género: {libro['genero']}"),
+                                ft.Text(f"Título: {libro.titulo}", size=18, weight="bold"),
+                                ft.Text(f"Autor: {libro.autor}"),
+                                ft.Text(f"Año: {libro.anio}"),
+                                ft.Text(f"Género: {libro.genero}"),
                             ], expand=True),
                             ft.IconButton(
                                 icon="star" if en_favoritos else "star_border",
                                 tooltip="Agregar a favoritos" if not en_favoritos else "Ya en favoritos",
                                 disabled=en_favoritos,
                                 icon_color="#FFD700" if en_favoritos else "#888888",
-                                on_click=(lambda e, l_id=libro["id"]: on_agregar_favorito(l_id)) if not en_favoritos else None
+                                on_click=(lambda e, l=libro: on_agregar_favorito(l)) if not en_favoritos else None
                             )
                         ], alignment="spaceBetween"),
                         padding=10,
@@ -69,16 +77,16 @@ def buscador_libro_view(page: ft.Page, db, user, volver_al_menu):
     def on_buscar(e=None):
         cargar_resultados(search_input.value)
 
-    def on_agregar_favorito(id_libro):
-        if agregar_favorito(db, user.id, id_libro):
+    def on_agregar_favorito(libro: Libro):
+        nonlocal favoritos_ids
+        if agregar_favorito(db, user, libro):
             page.snack_bar = ft.SnackBar(ft.Text("Libro agregado a favoritos."), bgcolor="green")
         else:
             page.snack_bar = ft.SnackBar(ft.Text("Error al agregar a favoritos o ya está en favoritos."), bgcolor="red")
         page.snack_bar.open = True
         # Actualizar favoritos y recargar resultados
-        nonlocal favoritos_ids
-        nuevos_favoritos = get_favoritos(db, user.id) or []
-        favoritos_ids = {libro["id"] for libro in nuevos_favoritos}
+        nuevos_favoritos = get_favoritos(db, user) or []
+        favoritos_ids = {l.id for l in nuevos_favoritos}
         cargar_resultados(search_input.value)
 
     # Barra superior con input y lupa
@@ -96,9 +104,6 @@ def buscador_libro_view(page: ft.Page, db, user, volver_al_menu):
         icon="arrow_back",
         on_click=lambda e: volver_al_menu()
     )
-
-    # Contenedor de resultados
-    resultados = ft.Column([], expand=True, scroll="auto")
 
     # Layout principal
     elementos = [

@@ -76,11 +76,11 @@ def abm_libros_view(page: ft.Page, db, volver_al_menu):
             tabla.rows.append(
                 ft.DataRow(
                     cells=[
-                        ft.DataCell(ft.Text(str(libro.get("id", "")))),
-                        ft.DataCell(ft.Text(libro.get("titulo", ""))),
-                        ft.DataCell(ft.Text(libro.get("autor", ""))),
-                        ft.DataCell(ft.Text(str(libro.get("anio", "")))),
-                        ft.DataCell(ft.Text(libro.get("genero", ""))),
+                        ft.DataCell(ft.Text(str(libro.id))),
+                        ft.DataCell(ft.Text(libro.titulo)),
+                        ft.DataCell(ft.Text(libro.autor)),
+                        ft.DataCell(ft.Text(str(libro.anio))),
+                        ft.DataCell(ft.Text(libro.genero)),
                         ft.DataCell(
                             ft.Row(
                                 [
