@@ -1,7 +1,8 @@
 import flet as ft
-from Utilities.funtions import buscar_libros, eliminar_favorito, get_favoritos, agregar_favorito
+from Utilities.funtions import eliminar_favorito, get_favoritos
+from models.Libro import Libro
 
-def favoritos_view(page: ft.Page, db, user, volver_al_menu=None):
+def favoritos_view(page: ft.Page, db, user, volver_al_menu):
     page.title = "Mis favoritos"
     page.clean()
 
@@ -10,7 +11,7 @@ def favoritos_view(page: ft.Page, db, user, volver_al_menu=None):
     search_button = ft.IconButton(icon="search", tooltip="Buscar")
 
     # pedir favoritos del usuario
-    favoritos = get_favoritos(db, user["id"]) or []
+    favoritos = get_favoritos(db, user) or []
 
     # Filtro de búsqueda
     def cargar_favoritos(filtro=""):
@@ -18,10 +19,10 @@ def favoritos_view(page: ft.Page, db, user, volver_al_menu=None):
         if filtro:
             filtrados = [
                 libro for libro in favoritos
-                if filtro in libro["titulo"].lower()
-                or filtro in libro["autor"].lower()
-                or filtro in libro["genero"].lower()
-                or filtro in str(libro["anio"])
+                if filtro in libro.titulo.lower()
+                or filtro in libro.autor.lower()
+                or filtro in libro.genero.lower()
+                or filtro in str(libro.anio)
             ]
         else:
             filtrados = favoritos
@@ -54,16 +55,16 @@ def favoritos_view(page: ft.Page, db, user, volver_al_menu=None):
                 rows.append(
                     ft.DataRow(
                         cells=[
-                            ft.DataCell(ft.Text(str(libro["id"]))),
-                            ft.DataCell(ft.Text(libro["titulo"])),
-                            ft.DataCell(ft.Text(libro["autor"])),
-                            ft.DataCell(ft.Text(str(libro["anio"]))),
-                            ft.DataCell(ft.Text(libro["genero"])),
+                            ft.DataCell(ft.Text(str(libro.id))),
+                            ft.DataCell(ft.Text(libro.titulo)),
+                            ft.DataCell(ft.Text(libro.autor)),
+                            ft.DataCell(ft.Text(str(libro.anio))),
+                            ft.DataCell(ft.Text(libro.genero)),  # ✅ corregido
                             ft.DataCell(
                                 ft.IconButton(
                                     icon="delete",
                                     tooltip="Eliminar de favoritos",
-                                    on_click=lambda e, l_id=libro["id"]: eliminar_fav(e, l_id)
+                                    on_click=lambda e, l=libro: eliminar_fav(db, user, l)
                                 )
                             ),
                         ]
@@ -81,16 +82,17 @@ def favoritos_view(page: ft.Page, db, user, volver_al_menu=None):
     def on_buscar(e=None):
         cargar_favoritos(search_input.value)
 
-    def eliminar_fav(e, id_libro):
-        if eliminar_favorito(db, user["id"], id_libro):
+    def eliminar_fav(db, user, libro: Libro):
+        nonlocal favoritos  # ✅ importante: actualizar la lista compartida
+        if eliminar_favorito(db, user, libro):
             page.snack_bar = ft.SnackBar(ft.Text("Libro eliminado de favoritos."), bgcolor="green")
         else:
             page.snack_bar = ft.SnackBar(ft.Text("Error al eliminar favorito."), bgcolor="red")
         page.snack_bar.open = True
         # Recargar favoritos y resultados
-        nonlocal favoritos
-        favoritos = get_favoritos(db, user["id"]) or []
-        cargar_favoritos(search_input.value)
+        favoritos = get_favoritos(db, user) or []
+        cargar_favoritos()
+        page.update()
 
     # Barra superior con input y lupa
     barra_busqueda = ft.Row([

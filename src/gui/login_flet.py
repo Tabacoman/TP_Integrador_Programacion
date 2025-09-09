@@ -1,9 +1,13 @@
 import flet as ft
 from Utilities.funtions import log_in, insert_usuario
+from models.Libro import Libro
+from models.User import User
 
 def login_view(page: ft.Page, db, on_login_success):
+    #funcion boton ingresar
     def btn_ingresar(usuario, contrasena):
-        user = log_in(db, usuario, contrasena)
+        user = User(usuario, contrasena,"")
+        user = log_in(db, user)
         if user:
             on_login_success(page, user)
         else:

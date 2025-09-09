@@ -4,13 +4,14 @@ from gui.buscar_libro_flet import buscador_libro_view
 from gui.mis_favoritos_flet import favoritos_view
 from gui.login_flet import login_view
 
-def main_menu(page: ft.Page, db, user):
+
+def main_menu(page: ft.Page, db, user, on_login_success):
     page.title = "Biblioteca Moderna"
     page.clean()
 
     # Función para volver al menú principal
     def volver_al_menu():
-        main_menu(page, db, user)
+        main_menu(page, db, user, on_login_success)
 
     # Encabezado superior
     header = ft.Container(
@@ -24,7 +25,7 @@ def main_menu(page: ft.Page, db, user):
                 ft.TextButton("Favoritos", style=ft.ButtonStyle(color="white", overlay_color="#2B169F"), on_click=lambda e: favoritos_view(page, db, user, volver_al_menu)),
                 *(
                     [ft.TextButton("ABM Libros", style=ft.ButtonStyle(color="white", overlay_color="#2B169F"), on_click=lambda e: abm_libros_view(page, db, volver_al_menu))]
-                    if user.get("rol") == "admin" else []
+                    if user.rol == "admin" else []
                 ),
                 ft.TextButton("Cerrar sesión", style=ft.ButtonStyle(color="white", overlay_color="#e53e3e"), on_click=lambda e: (page.clean(), login_view(page, db, on_login_success))),
             ], spacing=20)
@@ -33,8 +34,8 @@ def main_menu(page: ft.Page, db, user):
         shadow=ft.BoxShadow(blur_radius=10, color="#00000033", offset=ft.Offset(0, 4))
     )
 
-    bienvenida = ft.Text(f"¡Bienvenido, {user['username']}!", size=26, weight="bold", color="#2d267f", font_family="Arial")
-    rol_text = ft.Text(f"Rol: {user['rol']}", size=18, color="#4f46e5", font_family="Arial")
+    bienvenida = ft.Text(f"¡Bienvenido, {user.username}!", size=26, weight="bold", color="#2d267f", font_family="Arial")
+    rol_text = ft.Text(f"Rol: {user.rol}", size=18, color="#4f46e5", font_family="Arial")
 
     botones = [
         ft.ElevatedButton(
@@ -61,7 +62,7 @@ def main_menu(page: ft.Page, db, user):
         ),
     ]
 
-    if user.get("rol") == "admin":
+    if user.rol == "admin":
         botones.append(
             ft.ElevatedButton(
                 "✏️ Gestión de libros (ABM)",
@@ -160,7 +161,4 @@ def main_menu(page: ft.Page, db, user):
     )
     page.update()
 
-def on_login_success(page, user):
-    from db.database import Database
-    db = Database("biblioteca.db")
-    main_menu(page, db, user)
+
