@@ -31,7 +31,7 @@ def login_view(page: ft.Page, db, on_login_success):
         elif pwd != pwd2:
             registro_error.value = "Las contraseñas no coinciden."
         else:
-            ok = insert_usuario(db, user, pwd, "user")
+            ok = insert_usuario(db, User(user,pwd,"user"))
             if ok:
                 registro_error.value = "Usuario registrado correctamente. Ahora puede iniciar sesión."
                 registro_error.color = "green"

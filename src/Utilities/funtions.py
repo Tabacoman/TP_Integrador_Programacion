@@ -1,5 +1,6 @@
 from models.Libro import Libro
 from models.User import User
+from models.Errors import *
 
 def log_in(db, user: User):
     try: 
@@ -9,9 +10,9 @@ def log_in(db, user: User):
         )
         
         return User(row["username"], row["password"], row["rol"], row["id"])
+    
     except Exception as e:
-        print(e)
-        return False
+        raise UnexpectedAppError(e) from e
 
 def get_libros(db):
     try:
@@ -20,7 +21,7 @@ def get_libros(db):
         return [Libro(row["titulo"], row["autor"], row["anio"], row["genero"], row["id"]) for row in Rows]
 
     except Exception as e:
-        print(e)
+        raise UnexpectedAppError(e) from e
     
 def insert_libro(db, libro: Libro):
     try:
@@ -30,18 +31,17 @@ def insert_libro(db, libro: Libro):
             (libro.titulo, libro.autor, libro.anio, libro.genero)
         )
         if libro_existente:
-            print("Error: El libro ya existe en la base de datos.")
-            return False
+            raise BookAlreadyExistsError(libro.titulo)
         # Insertar el libro si no existe
         db.execute_query(
             "INSERT INTO libros (titulo, autor, anio, genero) VALUES (?, ?, ?, ?)",
             (libro.titulo, libro.autor, libro.anio, libro.genero)
         )
-        print("Libro insertado correctamente.")
         return True
+    except AppError:
+        raise
     except Exception as e:
-        print(f"Error al insertar libro: {e}")
-        return False
+        raise UnexpectedAppError(e) from e
 
 def update_libro(db, libro: Libro):
     try:
@@ -51,18 +51,18 @@ def update_libro(db, libro: Libro):
             (libro.titulo, libro.autor, libro.anio, libro.genero, libro.id)
         )
         if libro_existente:
-            print("Error: Ya existe otro libro con esos datos.")
-            return False
+            raise BookAlreadyExistsError(libro.titulo)
         # Actualizar el libro
         db.execute_query(
             "UPDATE libros SET titulo = ?, autor = ?, anio = ?, genero = ? WHERE id = ?",
             (libro.titulo, libro.autor, libro.anio, libro.genero, libro.id)
         )
-        print("Libro actualizado correctamente.")
         return True
+    
+    except AppError:
+        raise
     except Exception as e:
-        print(f"Error al actualizar libro: {e}")
-        return False
+        raise UnexpectedAppError(e) from e
 
 def delete_libro(db, libro: Libro):
     try:
@@ -70,10 +70,9 @@ def delete_libro(db, libro: Libro):
             "DELETE FROM libros WHERE id = ?",
             (libro.id,)
         )
-        print("Libro eliminado correctamente.")
         return True
     except Exception as e:
-        print(f"Error al eliminar libro: {e}")
+        raise AppError(f"error no esperado:{e}") from e
 
 def buscar_libros(db, libro: Libro):
     query = "SELECT * FROM libros WHERE 1=1"
@@ -97,8 +96,7 @@ def buscar_libros(db, libro: Libro):
         return [Libro(row["titulo"], row["autor"], row["anio"], row["genero"], row["id"]) for row in Rows]
  
     except Exception as e:
-        print(f"Error al buscar libros: {e}")
-        return []
+        raise AppError(f"error no esperado:{e}") from e
 
 def agregar_favorito(db, user: User, libro: Libro):
     try:
@@ -108,30 +106,28 @@ def agregar_favorito(db, user: User, libro: Libro):
             (user.id, libro.id)
         )
         if favorito_existente:
-            print("Error: El libro ya está en favoritos.")
-            return False
+            raise AlreadyInFavoritesError(libro.titulo)
+
         # Insertar favorito
         db.execute_query(
             "INSERT INTO favoritos (id_usuario, id_libro) VALUES (?, ?)",
             (user.id, libro.id)
         )
-        print("Libro agregado a favoritos correctamente.")
         return True
+    except AppError:
+        raise
     except Exception as e:
-        print(f"Error al agregar a favoritos: {e}")
-        return False
-
+        raise UnexpectedAppError(e) from e
+    
 def eliminar_favorito(db, user: User, libro: Libro):
     try:
         db.execute_query(
             "DELETE FROM favoritos WHERE id_usuario = ? AND id_libro = ?",
             (user.id, libro.id)
         )
-        print("Libro eliminado de favoritos correctamente.")
         return True
     except Exception as e:
-        print(f"Error al eliminar de favoritos: {e}")
-        return False
+        raise AppError(f"error no esperado:{e}") from e
 
 def get_favoritos(db, user: User):
     try:
@@ -143,31 +139,29 @@ def get_favoritos(db, user: User):
         """, (user.id,))
         return [Libro(f["titulo"], f["autor"], f["anio"], f["genero"], f["id"]) for f in favoritos]
     except Exception as e:
-        print(e)
-        return []
+        raise AppError(f"error no esperado:{e}") from e
 
 def insert_usuario(db, user: User):
     try:
         # Verificar si ya existe el usuario
         usuario_existente = db.fetch_one(
             "SELECT * FROM usuarios WHERE username = ?",
-            (user.id,)
+            (user.username,)
         )
         if usuario_existente:
-            print("Error: El usuario ya existe.")
-            return False
+            raise UserAlreadyExistsError(user.username)
 
         if len(user.password) < 6:
-            print("Error: La contraseña debe tener al menos 6 caracteres.")
-            return False
+            raise InvalidPasswordError()
 
         # Insertar nuevo usuario
         db.execute_query(
             "INSERT INTO usuarios (username, password, rol) VALUES (?, ?, ?)",
-            (user.id, user.password, user.rol)
+            (user.username, user.password, user.rol)
         )
-        print("Usuario registrado correctamente.")
+        
         return True
+    except AppError:
+        raise
     except Exception as e:
-        print(f"Error al insertar usuario: {e}")
-        return False
+        raise UnexpectedAppError(e) from e
