@@ -63,7 +63,16 @@ def favoritos_view(page: ft.Page, db, user, volver_al_menu):
                     )
                 )
 
-        main_column.controls[3:] = contenido
+        libros_scroll = ft.Column(
+            contenido,
+            expand=True,
+            scroll="auto",
+            alignment="center",
+            horizontal_alignment="center",
+            spacing=10
+        )
+        # Ahora pon el botón volver después del scroll
+        main_column.controls[3:] = [libros_scroll, btn_volver]
         page.update()
 
     def on_buscar(e=None):
@@ -97,7 +106,6 @@ def favoritos_view(page: ft.Page, db, user, volver_al_menu):
     main_column = ft.Column([
         ft.Text("📚 Mis libros favoritos", size=28, weight="bold", color="#2d3e50", font_family="Georgia", text_align="center"),
         barra_busqueda,
-        btn_volver
     ], alignment="center", horizontal_alignment="center", expand=True, spacing=20)
 
     main_content = ft.Container(
@@ -106,7 +114,8 @@ def favoritos_view(page: ft.Page, db, user, volver_al_menu):
         border_radius=30,
         padding=40,
         expand=True,
-        alignment=ft.alignment.center
+        alignment=ft.alignment.center,
+        height=600
     )
 
     page.add(

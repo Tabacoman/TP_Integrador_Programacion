@@ -103,7 +103,16 @@ def abm_libros_view(page: ft.Page, db, volver_al_menu):
                     shadow=ft.BoxShadow(blur_radius=4, color="#00000022", offset=ft.Offset(0, 2))
                 )
             )
-        main_column.controls[2:] = contenido
+        libros_scroll = ft.Column(
+            contenido,
+            expand=True,
+            scroll="auto",
+            alignment="center",
+            horizontal_alignment="center",
+            spacing=10
+        )
+        # Pon el botón volver después del scroll
+        main_column.controls[2:] = [libros_scroll, btn_volver]
         page.update()
 
     page.title = "Gestión de Libros (ABM)"
@@ -139,7 +148,6 @@ def abm_libros_view(page: ft.Page, db, volver_al_menu):
     main_column = ft.Column([
         ft.Text("📚 Gestión de Libros", size=28, weight="bold", color="#2d3e50", font_family="Georgia", text_align="center"),
         ft.Row([btn_agregar], alignment="center"),
-        btn_volver
     ], alignment="center", horizontal_alignment="center", expand=True, spacing=20)
 
     main_content = ft.Container(
@@ -148,7 +156,8 @@ def abm_libros_view(page: ft.Page, db, volver_al_menu):
         border_radius=30,
         padding=40,
         expand=True,
-        alignment=ft.alignment.center
+        alignment=ft.alignment.center,
+        height=600
     )
 
     page.add(
