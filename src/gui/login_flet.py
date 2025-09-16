@@ -89,7 +89,7 @@ def login_view(page: ft.Page, db, on_login_success):
                 width=300,
                 on_click=lambda e: btn_ingresar(usuario.value, contrasena.value)
             ),
-            ft.TextButton("Registrarse", on_click=abrir_registro)  # <-- Botón nuevo
+            ft.ElevatedButton("Registrarse",width=300 ,  on_click=abrir_registro)  # <-- Botón nuevo
         ], alignment="center", horizontal_alignment="center"),
         alignment=ft.alignment.center
     )
