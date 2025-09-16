@@ -4,6 +4,13 @@ class AppError(Exception):
     """Clase base para todos los errores personalizados de la aplicación."""
     pass
 
+# --- Errores no esperados ---
+class UnexpectedAppError(AppError):
+    """Se lanza cuando ocurre un error inesperado en la aplicación."""
+    def __init__(self, original_exception):
+        super().__init__(f"Error no esperado: {original_exception}")
+        self.original_exception = original_exception
+
 
 # --- Errores de Usuarios ---
 class UserAlreadyExistsError(AppError):

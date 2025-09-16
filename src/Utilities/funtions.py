@@ -10,8 +10,9 @@ def log_in(db, user: User):
         )
         
         return User(row["username"], row["password"], row["rol"], row["id"])
+    
     except Exception as e:
-        raise AppError(f"error no esperado:{e}") from e
+        raise UnexpectedAppError(e) from e
 
 def get_libros(db):
     try:
@@ -20,7 +21,7 @@ def get_libros(db):
         return [Libro(row["titulo"], row["autor"], row["anio"], row["genero"], row["id"]) for row in Rows]
 
     except Exception as e:
-        raise AppError(f"error no esperado:{e}") from e
+        raise UnexpectedAppError(e) from e
     
 def insert_libro(db, libro: Libro):
     try:
@@ -37,8 +38,10 @@ def insert_libro(db, libro: Libro):
             (libro.titulo, libro.autor, libro.anio, libro.genero)
         )
         return True
+    except AppError:
+        raise
     except Exception as e:
-        raise AppError(f"error no esperado:{e}") from e
+        raise UnexpectedAppError(e) from e
 
 def update_libro(db, libro: Libro):
     try:
@@ -55,8 +58,11 @@ def update_libro(db, libro: Libro):
             (libro.titulo, libro.autor, libro.anio, libro.genero, libro.id)
         )
         return True
+    
+    except AppError:
+        raise
     except Exception as e:
-        raise AppError(f"error no esperado:{e}") from e
+        raise UnexpectedAppError(e) from e
 
 def delete_libro(db, libro: Libro):
     try:
@@ -108,9 +114,11 @@ def agregar_favorito(db, user: User, libro: Libro):
             (user.id, libro.id)
         )
         return True
+    except AppError:
+        raise
     except Exception as e:
-        raise AppError(f"error no esperado:{e}") from e
-
+        raise UnexpectedAppError(e) from e
+    
 def eliminar_favorito(db, user: User, libro: Libro):
     try:
         db.execute_query(
@@ -153,5 +161,7 @@ def insert_usuario(db, user: User):
         )
         
         return True
+    except AppError:
+        raise
     except Exception as e:
-        raise AppError(f"error no esperado:{e}") from e
+        raise UnexpectedAppError(e) from e
