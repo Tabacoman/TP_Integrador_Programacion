@@ -43,7 +43,15 @@ class BookNotFoundError(AppError):
     def __init__(self, id_libro):
         super().__init__(f"No se encontró el libro con ID {id_libro}.")
 
+class InvalidInsertError(AppError):
+    """se lanza cuando se ingresan campos incorrectos"""
+    def _init_(self):
+        super()._init_(f"Los datos ingresados son incorrectos")
 
+class VoidInsertError(AppError):
+    """se lanza cuando no se ingresa algun dato"""
+    def _init_(self):
+        super()._init_(f"Falta ingresar 1 o más datos")
 # --- Errores de Favoritos ---
 class AlreadyInFavoritesError(AppError):
     """Se lanza cuando un libro ya está en favoritos del usuario."""
@@ -55,3 +63,6 @@ class FavoriteNotFoundError(AppError):
     """Se lanza cuando se intenta eliminar un favorito inexistente."""
     def __init__(self, titulo):
         super().__init__(f"El libro '{titulo}' no está en favoritos.")
+
+class BookDeletedSuccessfully(AppError):
+    pass

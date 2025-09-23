@@ -1,6 +1,7 @@
 from Utilities.funtions import get_libros, insert_libro, update_libro, delete_libro
 import flet as ft
-
+from models.Libro import Libro
+from models.Errors import BookAlreadyExistsError, AppError, InvalidInsertError , VoidInsertError, BookDeletedSuccessfully
 
 def abm_libros_view(page: ft.Page, db, volver_al_menu):
     libro_editando = {"id": None}  # guarda el libro que se está editando
@@ -28,42 +29,54 @@ def abm_libros_view(page: ft.Page, db, volver_al_menu):
 
     def guardar_libro(e):
         _anio = anio.value.strip()
-        if _anio and not _anio.isdigit():
-            page.snack_bar = ft.SnackBar(ft.Text("El año debe ser numérico."))
-            page.snack_bar.open = True
-            page.update()
-            return
-
-        if libro_editando["id"] is None:
-            # INSERTAR
-            insert_libro(
-                db,
-                titulo.value.strip(),
-                autor.value.strip(),
-                int(_anio) if _anio else "",
-                genero.value.strip()
-            )
-        else:
-            # EDITAR
-            update_libro(
-                db,
-                libro_editando["id"],
-                titulo.value.strip(),
-                autor.value.strip(),
-                int(_anio) if _anio else "",
-                genero.value.strip()
-            )
-
-        # limpiar
-        for tf in (titulo, autor, anio, genero):
-            tf.value = ""
-
-        page.close(dlg)
-        refrescar()
+        try:
+            if _anio and not _anio.isdigit():
+                raise AppError("El año debe ser numérico.")
+            if libro_editando["id"] is None:
+                insert_libro(
+                    db, Libro(
+                        titulo.value.strip(),
+                        autor.value.strip(),
+                        int(_anio) if _anio else "",
+                        genero.value.strip()
+                    )
+                )
+            else:
+                update_libro(
+                    db, Libro(
+                        libro_editando["id"],
+                        titulo.value.strip(),
+                        autor.value.strip(),
+                        int(_anio) if _anio else "",
+                        genero.value.strip()
+                    )
+                )
+            for tf in (titulo, autor, anio, genero):
+                tf.value = ""
+            page.close(dlg)
+            refrescar()
+            page.open(ft.SnackBar(ft.Text("Libro guardado correctamente."), bgcolor="green"))
+        except BookAlreadyExistsError as err:
+            page.open(ft.SnackBar(ft.Text(str(err)), bgcolor="red"))
+        except InvalidInsertError as err:
+            page.open(ft.SnackBar(ft.Text(str (err)), bgcolor="red"))
+        except VoidInsertError as err:
+            page.open(ft.SnackBar(ft.Text(str (err)), bgcolor="red"))
+        except AppError as err:
+            page.open(ft.SnackBar(ft.Text(str(err)), bgcolor="red"))
+        except Exception as err:
+            page.open(ft.SnackBar(ft.Text(f"Error inesperado: {err}"), bgcolor="red"))
         page.update()
 
-    def eliminar_libro(libro):
-        delete_libro(db, libro.id)
+    def eliminar_libro(e, libro):
+        try:
+            delete_libro(db, libro)
+        except BookDeletedSuccessfully as msg:
+            page.open(ft.SnackBar(ft.Text(str(msg)), bgcolor="green"))
+        except AppError as err:
+            page.open(ft.SnackBar(ft.Text(str(err)), bgcolor="red"))
+        except Exception as err:
+            page.open(ft.SnackBar(ft.Text(f"Error inesperado: {err}"), bgcolor="red"))
         refrescar()
         page.update()
 
@@ -91,7 +104,7 @@ def abm_libros_view(page: ft.Page, db, volver_al_menu):
                             ft.IconButton(
                                 icon="delete",
                                 tooltip="Eliminar",
-                                on_click=lambda e, l=libro: eliminar_libro(l),
+                                on_click=lambda e, l=libro: eliminar_libro(e, l),
                                 icon_color="#e53e3e"
                             ),
                         ])

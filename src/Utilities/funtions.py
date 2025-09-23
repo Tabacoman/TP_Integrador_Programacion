@@ -10,8 +10,7 @@ def log_in(db, user: User):
         )
         
         return User(row["username"], row["password"], row["rol"], row["id"])
-    except TypeError as e:
-        raise InvalidLoginError() from e
+    
     except Exception as e:
         raise UnexpectedAppError(e) from e
 
@@ -26,6 +25,14 @@ def get_libros(db):
     
 def insert_libro(db, libro: Libro):
     try:
+        # Validación de campos vacíos
+        if not libro.titulo or not libro.autor or not libro.genero or libro.anio is None:
+            raise VoidInsertError("No puede haber campos vacíos.")
+
+        # Validación de año inválido
+        if not isinstance(libro.anio, int) or libro.anio <= 0:
+            raise InvalidInsertError("El año debe ser un número entero positivo.")
+
         # Verificar si el libro ya existe
         libro_existente = db.fetch_one(
             "SELECT * FROM libros WHERE titulo = ? AND autor = ? AND anio = ? AND genero = ?",
@@ -33,6 +40,7 @@ def insert_libro(db, libro: Libro):
         )
         if libro_existente:
             raise BookAlreadyExistsError(libro.titulo)
+
         # Insertar el libro si no existe
         db.execute_query(
             "INSERT INTO libros (titulo, autor, anio, genero) VALUES (?, ?, ?, ?)",
@@ -67,11 +75,10 @@ def update_libro(db, libro: Libro):
 
 def delete_libro(db, libro: Libro):
     try:
-        db.execute_query(
-            "DELETE FROM libros WHERE id = ?",
-            (libro.id,)
-        )
-        return True
+        db.execute_query("DELETE FROM libros WHERE id = ?", (libro.id,))
+        raise BookDeletedSuccessfully("Libro borrado correctamente.")
+    except BookDeletedSuccessfully:
+        raise
     except Exception as e:
         raise AppError(f"error no esperado:{e}") from e
 
