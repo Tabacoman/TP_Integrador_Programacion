@@ -15,7 +15,7 @@ from Utilities.funtions import (
     eliminar_favorito,
     get_favoritos,
 )
-from models.Errors import (   # ✅ Errors está en models
+from models.Errors import (   
     UserAlreadyExistsError,
     InvalidPasswordError,
     InvalidLoginError,
@@ -32,8 +32,7 @@ def db():
     os.close(fd)
     database = Database(db_name=path)
     database.create_tables()
-    yield database
-    os.remove(path)
+    return database
 
 def test_insert_usuario_and_login(db):
     user = User("usuario1", "clave123", "user")

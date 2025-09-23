@@ -100,7 +100,8 @@ class Database:
             params (tuple): Parámetros para la consulta
         """
         with self.get_connection() as conn:
-            conn.execute(query, params)
+            cursor = conn.execute(query, params)
+            return cursor.rowcount
 
     def fetch_all(self, query, params=()):
         """
