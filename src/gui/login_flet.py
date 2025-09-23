@@ -2,17 +2,23 @@ import flet as ft
 from Utilities.funtions import log_in, insert_usuario
 from models.Libro import Libro
 from models.User import User
+from models.Errors import AppError, UnexpectedAppError
 
 def login_view(page: ft.Page, db, on_login_success):
     #funcion boton ingresar
     def btn_ingresar(usuario, contrasena):
         user = User(usuario, contrasena,"")
-        user = log_in(db, user)
-        if user:
-            on_login_success(page, user)
+        try:
+            user = log_in(db, user)
+        except AppError as e:
+            page.open(ft.SnackBar(ft.Text(str(e)), bgcolor="red"))
+        except UnexpectedAppError as e:
+            page.open(ft.SnackBar(ft.Text(str(e)), bgcolor="red"))
         else:
-            mensaje_error.value = "Usuario o contraseña incorrectos"
-        page.update()
+            if user:
+                on_login_success(page, user)
+        finally:
+            page.update()
 
     # --- Registro de nuevo usuario ---
     def abrir_registro(e):
@@ -89,7 +95,7 @@ def login_view(page: ft.Page, db, on_login_success):
                 width=300,
                 on_click=lambda e: btn_ingresar(usuario.value, contrasena.value)
             ),
-            ft.ElevatedButton("Registrarse",width=300 ,  on_click=abrir_registro)  # <-- Botón nuevo
+            ft.ElevatedButton("Registrarse",width=300 ,  on_click=abrir_registro)
         ], alignment="center", horizontal_alignment="center"),
         alignment=ft.alignment.center
     )

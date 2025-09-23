@@ -10,7 +10,8 @@ def log_in(db, user: User):
         )
         
         return User(row["username"], row["password"], row["rol"], row["id"])
-    
+    except TypeError as e:
+        raise InvalidLoginError() from e
     except Exception as e:
         raise UnexpectedAppError(e) from e
 
