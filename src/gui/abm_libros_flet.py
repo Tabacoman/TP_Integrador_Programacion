@@ -1,6 +1,7 @@
-import flet as ft
 from Utilities.funtions import get_libros, insert_libro, update_libro, delete_libro
-
+import flet as ft
+from models.Libro import Libro
+from models.Errors import BookAlreadyExistsError, AppError, InvalidInsertError , VoidInsertError
 
 def abm_libros_view(page: ft.Page, db, volver_al_menu):
     libro_editando = {"id": None}  # guarda el libro que se está editando
@@ -8,11 +9,11 @@ def abm_libros_view(page: ft.Page, db, volver_al_menu):
     def abrir_formulario(e, libro=None):
         """Abrir formulario en modo agregar o editar"""
         if libro:  # MODO EDITAR
-            libro_editando["id"] = libro["id"]
-            titulo.value = libro["titulo"]
-            autor.value = libro["autor"]
-            anio.value = str(libro["anio"])
-            genero.value = libro["genero"]
+            libro_editando["id"] = libro.id
+            titulo.value = libro.titulo
+            autor.value = libro.autor
+            anio.value = str(libro.anio)
+            genero.value = libro.genero
             dlg.title = ft.Text("Editar libro")
         else:  # MODO AGREGAR
             libro_editando["id"] = None
@@ -28,95 +29,105 @@ def abm_libros_view(page: ft.Page, db, volver_al_menu):
 
     def guardar_libro(e):
         _anio = anio.value.strip()
-        if _anio and not _anio.isdigit():
-            page.snack_bar = ft.SnackBar(ft.Text("El año debe ser numérico."))
-            page.snack_bar.open = True
-            page.update()
-            return
-
-        if libro_editando["id"] is None:
-            # INSERTAR
-            insert_libro(
-                db,
-                titulo.value.strip(),
-                autor.value.strip(),
-                int(_anio) if _anio else "",
-                genero.value.strip()
-            )
-        else:
-            # EDITAR
-            update_libro(
-                db,
-                libro_editando["id"],
-                titulo.value.strip(),
-                autor.value.strip(),
-                int(_anio) if _anio else "",
-                genero.value.strip()
-            )
-
-        # limpiar
-        for tf in (titulo, autor, anio, genero):
-            tf.value = ""
-
-        page.close(dlg)
-        refrescar()
+        try:
+            if _anio and not _anio.isdigit():
+                raise AppError("El año debe ser numérico.")
+            if libro_editando["id"] is None:
+                insert_libro(
+                    db, Libro(
+                        titulo.value.strip(),
+                        autor.value.strip(),
+                        int(_anio) if _anio else "",
+                        genero.value.strip()
+                    )
+                )
+            else:
+                update_libro(
+                    db, Libro(
+                        libro_editando["id"],
+                        titulo.value.strip(),
+                        autor.value.strip(),
+                        int(_anio) if _anio else "",
+                        genero.value.strip()
+                    )
+                )
+            for tf in (titulo, autor, anio, genero):
+                tf.value = ""
+            page.close(dlg)
+            refrescar()
+            page.open(ft.SnackBar(ft.Text("Libro guardado correctamente."), bgcolor="green"))
+        except BookAlreadyExistsError as err:
+            page.open(ft.SnackBar(ft.Text(str(err)), bgcolor="red"))
+        except InvalidInsertError as err:
+            page.open(ft.SnackBar(ft.Text(str (err)), bgcolor="red"))
+        except VoidInsertError as err:
+            page.open(ft.SnackBar(ft.Text(str (err)), bgcolor="red"))
+        except AppError as err:
+            page.open(ft.SnackBar(ft.Text(str(err)), bgcolor="red"))
+        except Exception as err:
+            page.open(ft.SnackBar(ft.Text(f"Error inesperado: {err}"), bgcolor="red"))
         page.update()
 
-    def eliminar_libro(libro):
-        delete_libro(db, libro["id"])
+    def eliminar_libro(e, libro):
+        try:
+            delete_libro(db, libro)
+        except AppError as err:
+            page.open(ft.SnackBar(ft.Text(str(err)), bgcolor="red"))
+        except Exception as err:
+            page.open(ft.SnackBar(ft.Text(f"Error inesperado: {err}"), bgcolor="red"))
         refrescar()
         page.update()
 
     def refrescar(e=None):
         """Recargar libros desde la BD y actualizar la tabla"""
         libros = get_libros(db) or []
-        tabla.rows.clear()
-
+        contenido = []
         for libro in libros:
-            tabla.rows.append(
-                ft.DataRow(
-                    cells=[
-                        ft.DataCell(ft.Text(str(libro.id))),
-                        ft.DataCell(ft.Text(libro.titulo)),
-                        ft.DataCell(ft.Text(libro.autor)),
-                        ft.DataCell(ft.Text(str(libro.anio))),
-                        ft.DataCell(ft.Text(libro.genero)),
-                        ft.DataCell(
-                            ft.Row(
-                                [
-                                    ft.IconButton(
-                                        icon="edit",
-                                        tooltip="Editar",
-                                        on_click=lambda e, l=libro: abrir_formulario(e, l)
-                                    ),
-                                    ft.IconButton(
-                                        icon="delete",
-                                        tooltip="Eliminar",
-                                        on_click=lambda e, l=libro: eliminar_libro(l)
-                                    ),
-                                ]
-                            )
-                        ),
-                    ]
+            contenido.append(
+                ft.Container(
+                    ft.Row([
+                        ft.Column([
+                            ft.Text(f"Título: {libro.titulo}", size=18, weight="bold"),
+                            ft.Text(f"Autor: {libro.autor}"),
+                            ft.Text(f"Año: {libro.anio}"),
+                            ft.Text(f"Género: {libro.genero}"),
+                        ], expand=True),
+                        ft.Row([
+                            ft.IconButton(
+                                icon="edit",
+                                tooltip="Editar",
+                                on_click=lambda e, l=libro: abrir_formulario(e, l),
+                                icon_color="#568ec7"
+                            ),
+                            ft.IconButton(
+                                icon="delete",
+                                tooltip="Eliminar",
+                                on_click=lambda e, l=libro: eliminar_libro(e, l),
+                                icon_color="#e53e3e"
+                            ),
+                        ])
+                    ], alignment="spaceBetween"),
+                    padding=10,
+                    margin=ft.margin.symmetric(vertical=8, horizontal=0),
+                    bgcolor="#f4f4f4",
+                    border_radius=12,
+                    shadow=ft.BoxShadow(blur_radius=4, color="#00000022", offset=ft.Offset(0, 2))
                 )
             )
+        libros_scroll = ft.Column(
+            contenido,
+            expand=True,
+            scroll="auto",
+            alignment="center",
+            horizontal_alignment="center",
+            spacing=10
+        )
+        # Pon el botón volver después del scroll
+        main_column.controls[2:] = [libros_scroll, btn_volver]
         page.update()
 
     page.title = "Gestión de Libros (ABM)"
     page.clean()
-
-    # --- Tabla
-    tabla = ft.DataTable(
-        columns=[
-            ft.DataColumn(ft.Text("ID")),
-            ft.DataColumn(ft.Text("Título")),
-            ft.DataColumn(ft.Text("Autor")),
-            ft.DataColumn(ft.Text("Año")),
-            ft.DataColumn(ft.Text("Género")),
-            ft.DataColumn(ft.Text("Acciones")),
-        ],
-        rows=[]
-    )
 
     # --- Formulario
     titulo = ft.TextField(label="Título", autofocus=True)
@@ -145,14 +156,24 @@ def abm_libros_view(page: ft.Page, db, volver_al_menu):
     )
 
     # --- Layout
-    elementos = [
-        ft.Text("📚 Gestión de Libros", size=24, weight=ft.FontWeight.BOLD),
+    main_column = ft.Column([
+        ft.Text("📚 Gestión de Libros", size=28, weight="bold", color="#2d3e50", font_family="Georgia", text_align="center"),
         ft.Row([btn_agregar], alignment="center"),
-        tabla,
-        btn_volver
-    ]
+    ], alignment="center", horizontal_alignment="center", expand=True, spacing=20)
 
-    page.add(ft.Column(elementos, alignment="center", horizontal_alignment="center", expand=True))
+    main_content = ft.Container(
+        content=main_column,
+        bgcolor="#faf9e3",
+        border_radius=30,
+        padding=40,
+        expand=True,
+        alignment=ft.alignment.center,
+        height=600
+    )
+
+    page.add(
+        ft.Column([main_content], expand=True, alignment="center", horizontal_alignment="center")
+    )
 
     # Cargar datos
     refrescar()

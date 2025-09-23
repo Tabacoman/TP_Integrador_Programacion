@@ -51,6 +51,8 @@ class VoidInsertError(AppError):
     """se lanza cuando no se ingresa algun dato"""
     def __init__(self):
         super().__init__(f"Falta ingresar 1 o más datos")
+
+
 # --- Errores de Favoritos ---
 class AlreadyInFavoritesError(AppError):
     """Se lanza cuando un libro ya está en favoritos del usuario."""

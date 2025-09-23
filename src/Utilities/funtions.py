@@ -28,7 +28,7 @@ def insert_libro(db, libro: Libro):
     try:
         # Validación de campos vacíos
         if not libro.titulo or not libro.autor or not libro.genero or libro.anio is None:
-            raise VoidInsertError("No puede haber campos vacíos.")
+            raise VoidInsertError()
 
         # Validación de año inválido
         if not isinstance(libro.anio, int) or libro.anio <= 0:
