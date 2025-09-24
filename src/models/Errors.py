@@ -37,13 +37,20 @@ class BookAlreadyExistsError(AppError):
     def __init__(self, titulo):
         super().__init__(f"El libro '{titulo}' ya existe en la base de datos.")
 
-
 class BookNotFoundError(AppError):
     """Se lanza cuando no se encuentra un libro en la base de datos."""
     def __init__(self, id_libro):
         super().__init__(f"No se encontró el libro con ID {id_libro}.")
 
+class InvalidInsertError(AppError):
+    """se lanza cuando se ingresan campos incorrectos"""
+    def __init__(self):
+        super().__init__(f"Los datos ingresados son incorrectos")
 
+class VoidInsertError(AppError):
+    """se lanza cuando no se ingresa algun dato"""
+    def __init__(self):
+        super().__init__(f"Falta ingresar 1 o más datos")
 # --- Errores de Favoritos ---
 class AlreadyInFavoritesError(AppError):
     """Se lanza cuando un libro ya está en favoritos del usuario."""
