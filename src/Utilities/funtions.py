@@ -10,7 +10,8 @@ def log_in(db, user: User):
         )
         
         return User(row["username"], row["password"], row["rol"], row["id"])
-    
+    except TypeError as e:
+        raise InvalidLoginError()
     except Exception as e:
         raise UnexpectedAppError(e) from e
 
@@ -27,7 +28,7 @@ def insert_libro(db, libro: Libro):
     try:
         # Validación de campos vacíos
         if not libro.titulo or not libro.autor or not libro.genero or libro.anio is None:
-            raise VoidInsertError()
+            raise VoidInsertError("No puede haber campos vacíos.")
 
         # Validación de año inválido
         if not isinstance(libro.anio, int) or libro.anio <= 0:
@@ -81,7 +82,9 @@ def delete_libro(db, libro: Libro):
         raise
     except Exception as e:
         raise AppError(f"error no esperado:{e}") from e
-
+    else:
+        return True
+    
 def buscar_libros(db, libro: Libro):
     query = "SELECT * FROM libros WHERE 1=1"
     params = []
@@ -102,9 +105,9 @@ def buscar_libros(db, libro: Libro):
         Rows = db.fetch_all(query, tuple(params))
         
         return [Libro(row["titulo"], row["autor"], row["anio"], row["genero"], row["id"]) for row in Rows]
-
+ 
     except Exception as e:
-        raise AppError(f"error no esperado:{e}") from e
+        raise UnexpectedAppError(e) from e
 
 def agregar_favorito(db, user: User, libro: Libro):
     try:
@@ -129,14 +132,19 @@ def agregar_favorito(db, user: User, libro: Libro):
     
 def eliminar_favorito(db, user: User, libro: Libro):
     try:
-        db.execute_query(
+        Filas_cambiadas = db.execute_query(
             "DELETE FROM favoritos WHERE id_usuario = ? AND id_libro = ?",
             (user.id, libro.id)
         )
-        return True
+        if Filas_cambiadas == 0:
+            raise FavoriteNotFoundError(libro.titulo)
+    except AppError as e:
+        raise
     except Exception as e:
-        raise AppError(f"error no esperado:{e}") from e
-
+        raise UnexpectedAppError(e) from e
+    else:
+        return True
+    
 def get_favoritos(db, user: User):
     try:
         favoritos = db.fetch_all("""
@@ -147,7 +155,7 @@ def get_favoritos(db, user: User):
         """, (user.id,))
         return [Libro(f["titulo"], f["autor"], f["anio"], f["genero"], f["id"]) for f in favoritos]
     except Exception as e:
-        raise AppError(f"error no esperado:{e}") from e
+        raise UnexpectedAppError(e) from e
 
 def insert_usuario(db, user: User):
     try:
