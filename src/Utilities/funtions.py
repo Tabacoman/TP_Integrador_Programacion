@@ -109,7 +109,7 @@ def buscar_libros(db, libro: Libro):
         Rows = db.fetch_all(query, tuple(params))
         
         return [Libro(row["titulo"], row["autor"], row["anio"], row["genero"], row["id"]) for row in Rows]
- 
+
     except Exception as e:
         raise UnexpectedAppError(e) from e
 
