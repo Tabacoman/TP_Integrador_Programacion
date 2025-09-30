@@ -10,50 +10,24 @@ def favoritos_view(page: ft.Page, db, user, volver_al_menu):
     search_input = ft.TextField(label="Buscar en favoritos", expand=True)
     search_button = ft.IconButton(icon="search", tooltip="Buscar")
 
-    # definimos el botón volver antes para que cargar_favoritos lo pueda usar
-    btn_volver = ft.ElevatedButton(
-        "Volver",
-        icon="arrow_back",
-        on_click=lambda e: volver_al_menu()
-    )
+    favoritos = get_favoritos(db, user) or []
 
-    def eliminar_fav(e, libro: Libro):
-        try:
-            # eliminar_favorito devuelve True o lanza excepción
-            if eliminar_favorito(db, user, libro):
-                page.snack_bar = ft.SnackBar(ft.Text("Libro eliminado de favoritos."), bgcolor="green")
-                page.snack_bar.open = True
-            else:
-                page.snack_bar = ft.SnackBar(ft.Text("Error al eliminar favorito."), bgcolor="red")
-                page.snack_bar.open = True
-        except Exception as err:
-            page.snack_bar = ft.SnackBar(ft.Text(f"Error al eliminar favorito: {err}"), bgcolor="red")
-            page.snack_bar.open = True
-
-        # recargar la lista usando el texto actual del search_input (si hay)
-        cargar_favoritos(search_input.value)
-        page.update()
-
-    def cargar_favoritos(filtro: str = ""):
-        filtro = (filtro or "").strip().lower()
-
-        # traemos siempre la lista completa desde la BD (no reutilizar variables viejas)
-        todos_favoritos = get_favoritos(db, user) or []
-
+    def cargar_favoritos(filtro=""):
+        filtro = filtro.strip().lower()
         if filtro:
-            favoritos_filtrados = [
-                libro for libro in todos_favoritos
-                if (libro.titulo and filtro in libro.titulo.lower())
-                or (libro.autor and filtro in libro.autor.lower())
-                or (libro.genero and filtro in libro.genero.lower())
-                or (libro.anio and filtro in str(libro.anio))
+            filtrados = [
+                libro for libro in favoritos
+                if filtro in libro.titulo.lower()
+                or filtro in libro.autor.lower()
+                or filtro in libro.genero.lower()
+                or filtro in str(libro.anio)
             ]
         else:
-            favoritos_filtrados = todos_favoritos
+            filtrados = favoritos
 
         contenido = []
 
-        if not favoritos_filtrados:
+        if not filtrados:
             contenido.append(
                 ft.Container(
                     ft.Text("Todavía no hay libros agregados a favoritos.", size=20, weight="bold", color="grey"),
@@ -65,7 +39,7 @@ def favoritos_view(page: ft.Page, db, user, volver_al_menu):
                 )
             )
         else:
-            for libro in favoritos_filtrados:
+            for libro in filtrados:
                 contenido.append(
                     ft.Container(
                         ft.Row([
@@ -107,6 +81,17 @@ def favoritos_view(page: ft.Page, db, user, volver_al_menu):
 
     def on_buscar(e=None):
         cargar_favoritos(search_input.value)
+
+    def eliminar_fav(db, user, libro: Libro):
+        nonlocal favoritos
+        if eliminar_favorito(db, user, libro):
+            page.snack_bar = ft.SnackBar(ft.Text("Libro eliminado de favoritos."), bgcolor="green")
+        else:
+            page.snack_bar = ft.SnackBar(ft.Text("Error al eliminar favorito."), bgcolor="red")
+        page.snack_bar.open = True
+        favoritos = get_favoritos(db, user) or []
+        cargar_favoritos()
+        page.update()
 
     barra_busqueda = ft.Row([
         search_input,

@@ -28,7 +28,7 @@ def insert_libro(db, libro: Libro):
     try:
         # Validación de campos vacíos
         if not libro.titulo or not libro.autor or not libro.genero or libro.anio is None:
-            raise VoidInsertError()
+            raise VoidInsertError("No puede haber campos vacíos.")
 
         # Validación de año inválido
         if not isinstance(libro.anio, int) or libro.anio <= 0:
@@ -85,10 +85,8 @@ def delete_libro(db, libro: Libro):
     except AppError:
         raise
     except Exception as e:
-        raise UnexpectedAppError(e) from e
-    else:
-        return True
-    
+        raise AppError(f"error no esperado:{e}") from e
+
 def buscar_libros(db, libro: Libro):
     query = "SELECT * FROM libros WHERE 1=1"
     params = []
@@ -109,7 +107,7 @@ def buscar_libros(db, libro: Libro):
         Rows = db.fetch_all(query, tuple(params))
         
         return [Libro(row["titulo"], row["autor"], row["anio"], row["genero"], row["id"]) for row in Rows]
-
+ 
     except Exception as e:
         raise UnexpectedAppError(e) from e
 
