@@ -3,6 +3,8 @@ from gui.abm_libros_flet import abm_libros_view
 from gui.buscar_libro_flet import buscador_libro_view
 from gui.mis_favoritos_flet import favoritos_view
 from gui.login_flet import login_view
+from Utilities.funtions import get_libros
+from models.Errors import *
 
 
 def main_menu(page: ft.Page, db, user, on_login_success):
@@ -103,61 +105,60 @@ def main_menu(page: ft.Page, db, user, on_login_success):
         spacing=20
     )
 
-    # Libro recomendado (puedes cambiar los datos o traerlos de la base de datos)
-    libro_destacado = {
-        "titulo": "Harry Potter y el misterio del príncipe",
-        "autor": "J.K. Rowling",
-        "resena": "La serie de libros 'Harry Potter', escrita por J.K. Rowling, trata sobre las aventuras de un joven mago llamado Harry Potter y sus amigos Hermione Granger y Ron Weasley mientras estudian en el Colegio Hogwarts de Magia y Hechicería. La trama central gira en torno a la lucha de Harry contra el mago tenebroso Lord Voldemort, quien asesinó a sus padres y busca conquistar el mundo mágico.",
-        "imagen": "src\\gui\\harry potter.jpg"
-    }
-
     # --- Tema minimalista para la landing principal ---
     left_col = ft.Container(
         expand=True,
         bgcolor="#faf9e3",
         border_radius=ft.border_radius.only(top_left=40, bottom_left=40),
         margin=ft.margin.only(right=20),
-        height=500,
-        content=ft.Column([
-            ft.Container(
-                ft.Image(src=libro_destacado["imagen"], width=200, height=300, fit=ft.ImageFit.CONTAIN),
-                alignment=ft.alignment.center,
-                margin=20
-            )
-        ], alignment="center", horizontal_alignment="center")
     )
 
-    right_col = ft.Column(
+    # Obtén todos los libros y selecciona los 5 más recientes
+    libros = get_libros(db)
+    ultimos_libros = sorted(libros, key=lambda l: l.id if l.id is not None else 0, reverse=True)[:5]
+
+    libros_columna = ft.Column(
         [
-            ft.Text("📖 Libro recomendado", size=28, weight="bold", color="#2d3e50", font_family="Georgia", text_align="center"),
-            ft.Text(libro_destacado["titulo"], size=26, weight="bold", color="#2d3e50", font_family="Georgia", text_align="center"),
-            ft.Text(f"Autor: {libro_destacado['autor']}", size=20, color="#568ec7", font_family="Georgia", text_align="center"),
-            ft.Container(
-                ft.Text(libro_destacado["resena"], size=16, color="#2d3e50", font_family="Georgia", text_align="center"),
-                margin=ft.margin.symmetric(horizontal=40, vertical=20)
-            )
+            ft.Text("Últimos libros agregados", size=28, weight="bold", color="#2d3e50", font_family="Georgia", text_align="center"),
+            *[
+                ft.Container(
+                    ft.Column([
+                        ft.Text(libro.titulo, size=22, weight="bold", color="#2d3e50", font_family="Georgia"),
+                        ft.Text(f"Autor: {libro.autor}", size=18, color="#568ec7", font_family="Georgia"),
+                        ft.Text(f"Año: {libro.anio}", size=16, color="#2d3e50", font_family="Georgia"),
+                        ft.Text(f"Género: {libro.genero}", size=16, color="#2d3e50", font_family="Georgia"),
+                    ], spacing=2),
+                    bgcolor="#f4f4f4",
+                    border_radius=16,
+                    padding=20,
+                    margin=ft.margin.symmetric(vertical=12, horizontal=0),
+                    shadow=ft.BoxShadow(blur_radius=8, color="#568ec799", offset=ft.Offset(0, 4)),
+                    width=500
+                )
+                for libro in ultimos_libros
+            ]
         ],
         alignment="center",
-        horizontal_alignment="center",
-        spacing=10
+        horizontal_alignment="center",  # Centrado horizontal
+        spacing=10,
+        expand=True,
+        scroll="auto"
     )
 
     main_content = ft.Container(
+        content=libros_columna,
         bgcolor="#faf9e3",
-        padding=40,
-        content=ft.ResponsiveRow([
-            ft.Column([left_col], col={"xs": 12, "md": 5, "xl": 4}),
-            ft.Column([right_col], col={"xs": 12, "md": 7, "xl": 8}),
-        ], alignment="center", vertical_alignment="center", spacing=0),
         border_radius=30,
-        margin=ft.margin.only(top=30, left=20, right=20, bottom=20)
+        padding=40,
+        expand=True,
+        alignment=ft.alignment.center  # Centra el contenido en el container
     )
 
     page.add(
         ft.Column([
             header,
             main_content
-        ], expand=True)
+        ], expand=True, alignment="center", horizontal_alignment="center")
     )
     page.update()
 
