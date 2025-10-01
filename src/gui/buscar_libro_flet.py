@@ -77,19 +77,28 @@ def buscador_libro_view(page: ft.Page, db, user: User, volver_al_menu):
 
     def on_agregar_favorito(libro: Libro):
         nonlocal favoritos_ids
-        if agregar_favorito(db, user, libro):
-            page.snack_bar = ft.SnackBar(ft.Text("Libro agregado a favoritos."), bgcolor="green")
-        else:
-            page.snack_bar = ft.SnackBar(ft.Text("Error al agregar a favoritos o ya está en favoritos."), bgcolor="red")
-        page.snack_bar.open = True
+        try:
+            if agregar_favorito(db, user, libro):
+                page.open(ft.SnackBar(ft.Text(f"✅ Libro '{libro.titulo}' agregado a favoritos."), bgcolor="green"))
+            else:
+                page.open(ft.SnackBar(ft.Text("⚠️ Error al agregar o ya estaba en favoritos."), bgcolor="red"))
+        except Exception as err:
+            page.open(ft.SnackBar(ft.Text(f"❌ Error: {err}"), bgcolor="red"))
+
+        # refrescar favoritos
         nuevos_favoritos = get_favoritos(db, user) or []
         favoritos_ids = {l.id for l in nuevos_favoritos}
+
+        # recargar resultados (sin duplicar)
+        resultados.controls.clear()
         cargar_resultados(search_input.value)
 
-    barra_busqueda = ft.Row([
-        search_input,
-        search_button
-    ], alignment="center", vertical_alignment="center", spacing=10)
+        page.update()
+
+    barra_busqueda = ft.Row(
+        [search_input, search_button],
+        alignment="center", vertical_alignment="center", spacing=10
+    )
 
     search_input.on_submit = on_buscar
     search_button.on_click = on_buscar
@@ -103,7 +112,7 @@ def buscador_libro_view(page: ft.Page, db, user: User, volver_al_menu):
     # --- Tema igual que main_menu ---
     main_content = ft.Container(
         content=ft.Column([
-            ft.Text("📚 Buscar libros", size=28, weight="bold", color="#2d3e50", font_family="Georgia", text_align="center"),
+            ft.Text("Buscar libros", size=28, weight="bold", color="#2d3e50", font_family="Georgia", text_align="center"),
             barra_busqueda,
             resultados,
             btn_volver

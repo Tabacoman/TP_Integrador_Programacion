@@ -1,4 +1,3 @@
-# mis_favoritos_flet.py (versión corregida)
 from Utilities.funtions import eliminar_favorito, get_favoritos
 from models.Libro import Libro
 import flet as ft
@@ -10,27 +9,44 @@ def favoritos_view(page: ft.Page, db, user, volver_al_menu):
     search_input = ft.TextField(label="Buscar en favoritos", expand=True)
     search_button = ft.IconButton(icon="search", tooltip="Buscar")
 
-    favoritos = get_favoritos(db, user) or []
+    def eliminar_fav(e, libro: Libro):
+        try:
+            if eliminar_favorito(db, user, libro):
+                page.open(ft.SnackBar(ft.Text(f"Libro '{libro.titulo}' eliminado de favoritos."), bgcolor="green"))
+            else:
+                page.open(ft.SnackBar(ft.Text("Error al eliminar favorito."), bgcolor="red"))
+        except Exception as err:
+            page.open(ft.SnackBar(ft.Text(f"Error al eliminar favorito: {err}"), bgcolor="red"))
 
-    def cargar_favoritos(filtro=""):
-        filtro = filtro.strip().lower()
+        # recargar la lista con el texto actual del buscador
+        cargar_favoritos(search_input.value)
+        page.update()
+
+    def cargar_favoritos(filtro: str = ""):
+        filtro = (filtro or "").strip().lower()
+        todos_favoritos = get_favoritos(db, user) or []
+
         if filtro:
-            filtrados = [
-                libro for libro in favoritos
-                if filtro in libro.titulo.lower()
-                or filtro in libro.autor.lower()
-                or filtro in libro.genero.lower()
-                or filtro in str(libro.anio)
+            favoritos_filtrados = [
+                libro for libro in todos_favoritos
+                if (libro.titulo and filtro in libro.titulo.lower())
+                or (libro.autor and filtro in libro.autor.lower())
+                or (libro.genero and filtro in libro.genero.lower())
+                or (libro.anio and filtro in str(libro.anio))
             ]
         else:
-            filtrados = favoritos
+            favoritos_filtrados = todos_favoritos
 
         contenido = []
 
-        if not filtrados:
+        if not favoritos_filtrados:
+            # cartel cuando no hay favoritos
             contenido.append(
                 ft.Container(
-                    ft.Text("Todavía no hay libros agregados a favoritos.", size=20, weight="bold", color="grey"),
+                    ft.Text("Todavía no hay libros agregados a favoritos.",
+                            size=20,
+                            weight="bold",
+                            color="grey"),
                     alignment=ft.alignment.center,
                     padding=20,
                     bgcolor="#f5f5f5",
@@ -39,7 +55,7 @@ def favoritos_view(page: ft.Page, db, user, volver_al_menu):
                 )
             )
         else:
-            for libro in filtrados:
+            for libro in favoritos_filtrados:
                 contenido.append(
                     ft.Container(
                         ft.Row([
@@ -52,7 +68,6 @@ def favoritos_view(page: ft.Page, db, user, volver_al_menu):
                             ft.IconButton(
                                 icon="delete",
                                 tooltip="Eliminar de favoritos",
-                                # capturamos el libro en el lambda con l=libro
                                 on_click=lambda e, l=libro: eliminar_fav(e, l),
                                 icon_color="#e53e3e"
                             )
@@ -65,7 +80,7 @@ def favoritos_view(page: ft.Page, db, user, volver_al_menu):
                     )
                 )
 
-        # aseguramos que libros_scroll se crea SIEMPRE (incluso si la lista está vacía)
+        # siempre creamos un Column, con libros o con el cartel
         libros_scroll = ft.Column(
             contenido,
             expand=True,
@@ -75,36 +90,39 @@ def favoritos_view(page: ft.Page, db, user, volver_al_menu):
             spacing=10
         )
 
-        # reemplazamos desde la posición 2 (después del título y la barra de búsqueda)
+        # reemplazamos el contenido desde la posición 2
         main_column.controls[2:] = [libros_scroll, btn_volver]
         page.update()
 
     def on_buscar(e=None):
         cargar_favoritos(search_input.value)
 
-    def eliminar_fav(db, user, libro: Libro):
-        nonlocal favoritos
-        if eliminar_favorito(db, user, libro):
-            page.snack_bar = ft.SnackBar(ft.Text("Libro eliminado de favoritos."), bgcolor="green")
-        else:
-            page.snack_bar = ft.SnackBar(ft.Text("Error al eliminar favorito."), bgcolor="red")
-        page.snack_bar.open = True
-        favoritos = get_favoritos(db, user) or []
-        cargar_favoritos()
-        page.update()
-
-    barra_busqueda = ft.Row([
-        search_input,
-        search_button
-    ], alignment="center", vertical_alignment="center", spacing=10)
+    barra_busqueda = ft.Row(
+        [search_input, search_button],
+        alignment="center",
+        vertical_alignment="center",
+        spacing=10
+    )
 
     search_input.on_submit = on_buscar
     search_button.on_click = on_buscar
 
     main_column = ft.Column([
-        ft.Text("📚 Mis libros favoritos", size=28, weight="bold", color="#2d3e50", font_family="Georgia", text_align="center"),
+        ft.Text(" Mis libros favoritos",
+                size=28,
+                weight="bold",
+                color="#2d3e50",
+                font_family="Georgia",
+                text_align="center"),
         barra_busqueda,
     ], alignment="center", horizontal_alignment="center", expand=True, spacing=20)
+
+    # 🔹 ahora definimos btn_volver después de main_column
+    btn_volver = ft.ElevatedButton(
+        "Volver",
+        icon="arrow_back",
+        on_click=lambda e: volver_al_menu()
+    )
 
     main_content = ft.Container(
         content=main_column,
@@ -117,7 +135,10 @@ def favoritos_view(page: ft.Page, db, user, volver_al_menu):
     )
 
     page.add(
-        ft.Column([main_content], expand=True, alignment="center", horizontal_alignment="center")
+        ft.Column([main_content],
+                  expand=True,
+                  alignment="center",
+                  horizontal_alignment="center")
     )
 
     # primera carga

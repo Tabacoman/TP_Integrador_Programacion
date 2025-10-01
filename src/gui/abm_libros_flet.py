@@ -1,7 +1,7 @@
 from Utilities.funtions import get_libros, insert_libro, update_libro, delete_libro
 import flet as ft
 from models.Libro import Libro
-from models.Errors import BookAlreadyExistsError, AppError, InvalidInsertError , VoidInsertError
+from models.Errors import BookAlreadyExistsError, AppError, InvalidInsertError, VoidInsertError
 
 def abm_libros_view(page: ft.Page, db, volver_al_menu):
     libro_editando = {"id": None}  # guarda el libro que se está editando
@@ -59,9 +59,9 @@ def abm_libros_view(page: ft.Page, db, volver_al_menu):
         except BookAlreadyExistsError as err:
             page.open(ft.SnackBar(ft.Text(str(err)), bgcolor="red"))
         except InvalidInsertError as err:
-            page.open(ft.SnackBar(ft.Text(str (err)), bgcolor="red"))
+            page.open(ft.SnackBar(ft.Text(str(err)), bgcolor="red"))
         except VoidInsertError as err:
-            page.open(ft.SnackBar(ft.Text(str (err)), bgcolor="red"))
+            page.open(ft.SnackBar(ft.Text(str(err)), bgcolor="red"))
         except AppError as err:
             page.open(ft.SnackBar(ft.Text(str(err)), bgcolor="red"))
         except Exception as err:
@@ -71,6 +71,8 @@ def abm_libros_view(page: ft.Page, db, volver_al_menu):
     def eliminar_libro(e, libro):
         try:
             delete_libro(db, libro)
+            # ✅ Confirmación cuando se elimina correctamente
+            page.open(ft.SnackBar(ft.Text(f"Libro '{libro.titulo}' eliminado correctamente."), bgcolor="green"))
         except AppError as err:
             page.open(ft.SnackBar(ft.Text(str(err)), bgcolor="red"))
         except Exception as err:
