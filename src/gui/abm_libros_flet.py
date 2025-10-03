@@ -26,7 +26,7 @@ def abm_libros_view(page: ft.Page, db, volver_al_menu):
 
     def cerrar_dialogo(e=None):
         page.close(dlg)
-
+    
     def guardar_libro(e):
         _anio = anio.value.strip()
         try:
