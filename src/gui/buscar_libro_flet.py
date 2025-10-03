@@ -13,7 +13,7 @@ def buscador_libro_view(page: ft.Page, db, user: User, volver_al_menu):
 
     favoritos = get_favoritos(db, user) if user else []
     favoritos_ids = {libro.id for libro in favoritos} if favoritos else set()
-
+    #---funcion para filtrar los libros en la busqueda
     def cargar_resultados(filtro=""):
         filtro = filtro.strip().lower()
         if filtro:
@@ -71,7 +71,7 @@ def buscador_libro_view(page: ft.Page, db, user: User, volver_al_menu):
                     )
                 )
         page.update()
-
+    #-----
     def on_buscar(e=None):
         cargar_resultados(search_input.value)
 
@@ -79,11 +79,11 @@ def buscador_libro_view(page: ft.Page, db, user: User, volver_al_menu):
         nonlocal favoritos_ids
         try:
             if agregar_favorito(db, user, libro):
-                page.open(ft.SnackBar(ft.Text(f"✅ Libro '{libro.titulo}' agregado a favoritos."), bgcolor="green"))
+                page.open(ft.SnackBar(ft.Text(f"Libro '{libro.titulo}' agregado a favoritos."), bgcolor="green"))
             else:
-                page.open(ft.SnackBar(ft.Text("⚠️ Error al agregar o ya estaba en favoritos."), bgcolor="red"))
+                page.open(ft.SnackBar(ft.Text("Error al agregar o ya estaba en favoritos."), bgcolor="red"))
         except Exception as err:
-            page.open(ft.SnackBar(ft.Text(f"❌ Error: {err}"), bgcolor="red"))
+            page.open(ft.SnackBar(ft.Text(f"Error: {err}"), bgcolor="red"))
 
         # refrescar favoritos
         nuevos_favoritos = get_favoritos(db, user) or []

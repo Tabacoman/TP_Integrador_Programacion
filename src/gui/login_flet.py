@@ -57,7 +57,7 @@ def login_view(page: ft.Page, db, on_login_success):
     page.clean()
 
     usuario = ft.TextField(label="Usuario", width=300, bgcolor=ft.Colors.LIGHT_BLUE_100, color="black")
-    contrasena = ft.TextField(label="Contraseña", password=True, width=300, bgcolor=ft.Colors.LIGHT_BLUE_100, color="black")
+    contrasena = ft.TextField(label="Contraseña", password=True,can_reveal_password= True, width=300, bgcolor=ft.Colors.LIGHT_BLUE_100, color="black")
     mensaje_error = ft.Text("", color="red", size=16)
 
     # --- Dialogo de registro ---

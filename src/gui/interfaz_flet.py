@@ -20,7 +20,7 @@ def main_menu(page: ft.Page, db, user, on_login_success):
         bgcolor="#568ec7",
         padding=ft.padding.symmetric(vertical=20, horizontal=40),
         content=ft.Row([
-            ft.Text("Biblioteca Moderna", size=28, weight="bold", color="white", font_family="Arial"),
+            ft.Text("Biblioteca Moderna", size=28, weight="bold", color="white", font_family="Times New Roman"),
             ft.Row([
                 ft.TextButton("Inicio", style=ft.ButtonStyle(color="white", overlay_color="#2B169F"), on_click=lambda e: volver_al_menu()),
                 ft.TextButton("Buscar", style=ft.ButtonStyle(color="white", overlay_color="#2B169F"), on_click=lambda e: buscador_libro_view(page, db, user, volver_al_menu)),
@@ -33,7 +33,7 @@ def main_menu(page: ft.Page, db, user, on_login_success):
             ], spacing=20)
         ], alignment="spaceBetween"),
         border_radius=ft.border_radius.only(top_left=0, top_right=0, bottom_left=20, bottom_right=20),
-        shadow=ft.BoxShadow(blur_radius=10, color="#00000033", offset=ft.Offset(0, 4))
+        shadow=ft.BoxShadow(blur_radius=10, color="#00000033", offset=ft.Offset(0, 4)),
     )
 
     bienvenida = ft.Text(f"¡Bienvenido, {user.username}!", size=26, weight="bold", color="#2d267f", font_family="Arial")
@@ -93,25 +93,6 @@ def main_menu(page: ft.Page, db, user, on_login_success):
         )
     )
 
-    left_col = ft.Column(
-        [
-            bienvenida,
-            rol_text,
-            ft.Container(height=20),
-            *botones
-        ],
-        alignment="center",
-        horizontal_alignment="center",
-        spacing=20
-    )
-
-    # --- Tema minimalista para la landing principal ---
-    left_col = ft.Container(
-        expand=True,
-        bgcolor="#faf9e3",
-        border_radius=ft.border_radius.only(top_left=40, bottom_left=40),
-        margin=ft.margin.only(right=20),
-    )
 
     # Obtén todos los libros y selecciona los 5 más recientes
     libros = get_libros(db)
